@@ -1,3 +1,4 @@
 # cProgram
 
-Greyscale image using Floyd-Steinberg dithering strategy
+imagedither.c - Greyscale image using Floyd-Steinberg dithering strategy
+C program which reads any sized image file, and dithers it and save output to new file.   Sample output is Baby yoda Grogu after ditherin: Ns  
