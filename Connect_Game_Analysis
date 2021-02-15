@@ -1,0 +1,312 @@
+#include "trace-2d.h"
+#include <assert.h>
+#include <stdio.h>
+
+/////////////////////////////////////////////////////////////////////////////
+const int INVALID_GAME = -1;
+const int TIE = 1;
+const int MAX_BOARD_SIZE = 1024;
+/////////////////////////////////////////////////////////////////////////////
+
+// global constants
+const int NEXT_MOVE = 3;
+const int P1 = 1;
+const int P2 = 2;
+const int EMPTY = 0;
+const int TRUE = 1;
+const int FALSE = 0;
+const int NO_ONE = -98;
+const int EMPTY_PLAY = -99;
+
+struct board_game {
+  int len;
+  int maxlen;
+  int data[1024];
+  int y_axis[1024];
+  int read_connect[1024];
+  int width;
+  int height;
+  int current_x;
+  int current_y;
+  int connect_length;
+};
+// requires: len > 0 
+
+// inside_board(board, x, y) determines if the x and y 
+//  are inside the board
+int inside_board(struct board_game *board, int x, int y) {
+  if ((x < board->width) && (y < board->height) && (y >= 0) && (x >= 0)){
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+// board_init(board, width, height, connect_length) 
+//  initializes the board
+// effects: modifies board
+void board_init(struct board_game *board, int width, int 
+                height, int connect_length) {
+  assert(board);
+  board->len = width * height;
+  board->maxlen = MAX_BOARD_SIZE;
+  board->height = height;
+  board->width = width; 
+  board->connect_length = connect_length;
+  for (int count = 0; count <= (MAX_BOARD_SIZE - 1); ++count){  
+    board->data[count] = EMPTY;
+    board->y_axis[count] = 0;
+  }
+}
+
+// board_drop(board, x, y) fills the board with each move 
+//  a player makes
+// effects: modifies board
+void board_drop(struct board_game *board, int x, int y, char player) {
+  int index = y * board->width + x;
+  board->data[index] = player;
+  return;
+}
+
+// board_fill(board, moves, length, fill_length) fills 
+//  the board that each player makes
+// effects: modifies board
+int board_fill(struct board_game *board, const int 
+               moves[], int length, int fill_length) {
+  for (int count = 0; count < fill_length; ++count){
+    char player = P1;
+    if (((count + 1) % 2) == 0) {
+      player = P2;
+    }            
+    if ((board->y_axis[0] >= board->height) && 
+        (moves[count] == 0)) {
+      return INVALID_GAME;
+    }
+    int x = moves[count];
+    int y = board->y_axis[moves[count]];
+    if (y >= board->height) {
+      return INVALID_GAME;
+    }
+    if (x >= board->width) {
+      return INVALID_GAME;
+    }
+    board_drop(board, x, y, player);
+    board->current_x = x;
+    board->current_y = y;
+    ++board->y_axis[moves[count]];
+  }
+  return 0;
+}
+
+// board_read(board, x, y) reads the array
+char board_read(struct board_game *board, int x, int y) {
+  int index = y * board->width + x;
+  return board->data[index];
+}
+
+// init_result(board) initializes the board
+// effects: modifies board
+void init_result(struct board_game *board) {
+  for (int index = 0; index < 1024; index++) {
+    board->read_connect[index] = EMPTY_PLAY; 
+  }
+}
+
+// fill_positive_diagonal(board) fills the board with the 
+//  positive diagonal
+// effects: modifies board
+void fill_positive_diagonal(struct board_game *board) {
+  int index = 0;
+  init_result(board);
+  int current_y = board->current_y;
+  int current_x = board->current_x;
+  int connect_length = board->connect_length;
+  int xx = current_x - (connect_length -1);
+  int yy = current_y - (connect_length - 1);
+  for(int i = 0; i < (connect_length); ++i) {
+    if (inside_board(board, xx, yy) == FALSE) {
+      continue;
+    }
+    board->read_connect[index] = board_read(board, xx, yy );
+    ++index;
+  }
+  for(int i = 0; i <= (connect_length - 1); ++i) {
+    if (inside_board(board, current_x + i, current_y + i) == FALSE) {
+      continue;
+    }
+    board->read_connect[index] = 
+      board_read(board, current_x + i, current_y + i);
+    ++index;
+  }
+}
+
+// fill_negative_diagonal(board) fills the board with a 
+//  negative diagonal
+// effects: modifies board
+void fill_negative_diagonal(struct board_game *board) {
+  int index = 0;
+  init_result(board);
+  int current_y = board->current_y;
+  int current_x = board->current_x;
+  int connect_length = board->connect_length;
+  int xx = current_x - (connect_length - 1);
+  int yy = current_y + (connect_length - 1);
+  for(int i = 0; (i < connect_length); ++i) {
+    if (inside_board(board, xx + i, yy - i) == FALSE) {
+      continue;
+    }
+    board->read_connect[index] = board_read(board, xx + i, yy - i);
+    ++index;
+  }
+  for(int i = 1; i <= (connect_length - 1); ++i) {
+    if (inside_board(board, current_x + i, current_y - i) == FALSE) {
+      continue;
+    }
+    board->read_connect[index] = 
+      board_read(board, current_x + i, current_y - i);
+    ++index;
+  }
+}
+
+// fill_horizontal(board) fills the rows in the board 
+//  with the moves that the players make
+// effects: modifies board
+void fill_horizontal(struct board_game *board) {
+  int index = 0;
+  init_result(board);
+  int current_y = board->current_y;
+  int current_x = board->current_x;
+  int connect_length = board->connect_length;
+  for (int x = current_x - connect_length ;  x < current_x; ++x) {
+    if (inside_board(board, x, current_y) == FALSE) {
+      continue;
+    }
+    board->read_connect[index] = board_read(board, x, current_y);  
+    ++index;
+  }
+  for (int x = current_x ;  x < (current_x + connect_length); ++x) {
+    if (inside_board(board, x, current_y) == FALSE) {
+      continue;
+    }
+    board->read_connect[index] = board_read(board, x, current_y);
+    ++index;
+  }
+}
+
+// who_won(board) determines who wins the game or if the 
+//  game ties
+int who_won(struct board_game *board) {
+  int player1 = 0, player2 = 0;
+  int previous_value = board->read_connect[0];
+  if (previous_value == P1) {
+    player1 = 1;
+  }
+  if (previous_value == P2) {
+    player2 = 1;
+  }
+  for (int index = 1;  board->read_connect[index] != EMPTY_PLAY; ++index) {
+    if ((board->read_connect[index] == P1) && (previous_value == P1)) {
+      player1++;
+      if (player1 == board->connect_length) {
+        return P1; 
+      }
+    } else {
+      player1 = 0;
+    }
+    if ((board->read_connect[index] == P2) && (previous_value == P2))  {
+      player2++;
+      if (player2 == board->connect_length) {
+        return P2;  
+      }
+    } else {
+      player2 = 0;
+    }
+    previous_value = board->read_connect[index];
+  } 
+  return NO_ONE;
+}
+
+// fill_vertical(board) fills the columns in the board 
+//  with the moves that the players make
+// effects: modifies board
+void fill_vertical(struct board_game *board) {
+  int index = 0;
+  init_result(board);
+  int current_y = board->current_y;
+  int current_x = board->current_x;
+  int connect_length = board->connect_length;
+  for (int y = current_y; y >= current_y - connect_length; --y) {
+    if (inside_board(board, current_x, y) == FALSE) {
+      break;
+    }
+    int value = board_read(board, current_x, y);  
+    board->read_connect[index] = value;
+    ++index;
+  }
+}
+
+// board_won(board) determines if player one or two won 
+int board_won(struct board_game *board) {
+  fill_vertical(board);
+  int result = who_won(board);
+  if (result == P1) {
+    return P1;
+  }
+  if (result == P2) {
+    return P2;
+  }
+  fill_horizontal(board);
+  result = who_won(board);
+  if (result == P1) {
+    return P1;
+  }
+  if (result == P2) {
+    return P2;
+  }
+  fill_negative_diagonal(board);
+  result = who_won(board);
+  if (result == P1) {
+    return P1;
+  }
+  if (result == P2) {
+    return P2;
+  }
+  fill_positive_diagonal(board);
+  result = who_won(board);
+  if (result == P1) {
+    return P1;
+  }
+  if (result == P2) {
+    return P2;
+  }
+  return result;
+}
+
+// see connect.h for details
+int connect_analysis(const int moves[], int width, int height, int length){
+  struct board_game board = {0};
+  int current_x;
+  int current_y;
+  int total_moves = width * height;
+  for(int number_moves = length; number_moves <= 
+      total_moves; ++number_moves) {
+    board_init(&board, width, height, length);
+    int return_code = board_fill(&board, moves,length, number_moves);
+    if (return_code == INVALID_GAME) {
+      return INVALID_GAME;
+    }
+    current_x = board.current_x;
+    current_y = board.current_y;
+    int player = board_won(&board);
+    if (player == P1) {
+      return number_moves;
+    }
+    else if (player == P2) {
+      return -number_moves;
+    }
+    else if (player == NEXT_MOVE) {
+      continue;  
+    }
+  }
+  return TIE;
+}
