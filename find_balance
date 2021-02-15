@@ -1,0 +1,61 @@
+void find_balance(struct stack *s) {
+  char ch;
+  for(;(scanf("%c", &ch)==1);) {
+    //  int return_value = scanf("%c", &ch);
+    // if (return_value != 1)
+    //  break;
+    if ((ch == '(') || (ch == '{') || (ch == '<') || 
+        (ch == '[')) {
+      stack_push(ch, s);
+      trace_msg("right");
+      trace_char(ch);
+    }
+    if ((ch == ')') || (ch == '}') || (ch == '>') || 
+        (ch == ']')) {
+      if (stack_is_empty(s)) {
+        printf("unbalanced\n");
+        return;
+      }
+      else if ((stack_top(s) == '(') && (ch == ')')) { 
+        stack_pop(s);
+        trace_msg("left");
+        trace_char(ch);
+      }
+      else if ((stack_top(s) == '{') && (ch == '}')) { 
+        stack_pop(s);
+        trace_msg("left");
+        trace_char(ch);
+      }
+      else if ((stack_top(s) == '[') && (ch == ']')) { 
+        stack_pop(s);
+        trace_msg("left");
+        trace_char(ch);
+      }
+      else if ((stack_top(s) == '<') && (ch == '>')) { 
+        stack_pop(s);
+        trace_msg("left");
+        trace_char(ch);
+      }
+      else {
+        printf("unbalanced\n");
+        trace_msg("end");
+        trace_char(ch);
+        return;
+      }
+    }
+  } // for end
+  if (stack_is_empty(s)) {
+    printf("balanced\n");
+  }
+  else {
+    printf("unbalanced\n");
+  }
+}
+
+
+int main(void) {
+  trace_off();
+  struct stack *my_stack = stack_create();
+  find_balance(my_stack);
+  stack_destroy(my_stack);
+}
