@@ -8,3 +8,7 @@ Connect_Game_Analysis.c - Program returns verdict of the winner of the connect g
 
 frequency_sort.c - Input is an array of integers. The output are the integers sorted by frequency of occurrence. For examples: Input - {2, 2, 1, 5, 3, 5, 5}
 Output - {5, 5, 5, 2, 2, 1, 3}. This algorithim is not allowed to use any other array variables. 
+
+selection_sort.c - implements array sorts using selection sort algorithm. 
+
+index_sort.c - uses index sort to sort an array. 
