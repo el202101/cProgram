@@ -12,3 +12,5 @@ Output - {5, 5, 5, 2, 2, 1, 3}. This algorithim is not allowed to use any other 
 selection_sort.c - implements array sorts using selection sort algorithm. 
 
 index_sort.c - uses index sort to sort an array. 
+
+find_balance.c - uses stack push/pop to validate if string if incoming stream of characters have balanced number of (, {, [
