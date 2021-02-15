@@ -1,0 +1,16 @@
+
+void index_sort(const int a[], int len, int idx[]) {
+  for(int count = 0; count <= (len - 1); ++count) {
+    idx[count] = count;
+  } 
+  int pos = 0;
+  for (int i = 0; i < len - 1; ++i) {
+    pos = i;
+    for (int j = i + 1; j < len; ++j) {
+      if (a[j] < a[pos]) {
+        pos = j;
+      }
+    }
+    overwrite(&idx[i], &idx[pos]); 
+  }
+}
