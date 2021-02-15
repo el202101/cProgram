@@ -1,0 +1,122 @@
+// overwrite(px, py) swaps px and py
+// effects: modifies *px and *py
+void reg_swap(int *px, int *py) {
+  int temp = *px;
+  *px = *py;
+  *py = temp;
+}
+
+// selection_sort(a, len) sorts the elements in the array 
+//  in increasing order
+// effects: modifies a 
+void selection_sort(int a[], int len) {
+  int pos = 0;
+  for (int i = 0; i < len - 1; ++i) {
+    pos = i;
+    for (int j = i + 1; j < len; ++j) {
+      if (a[j] < a[pos]) {
+        pos = j;
+      }
+    }
+    reg_swap(&a[i], &a[pos]); 
+  }
+}
+
+// find_for_move(a, lookstart, begin) finds the most 
+//  frequent element in the array and the beginning and 
+//  ending index where the element is located
+// requires: array is sorted in ascending order
+void find_for_move(int a[], int lookstart, int *begin,  
+                   int *end, int *value,int len) {
+  int mostFreqValue = a[lookstart];
+  int prevValue = mostFreqValue;
+  int currfreq = 1;
+  int prevFreq = 0;
+  int bbegin = lookstart;
+  int eend = lookstart;
+  *begin = lookstart;
+  *end = lookstart;
+  *value= mostFreqValue;
+  for (int ii=lookstart+1; ii<len; ii++){ 
+    if (a[ii] == prevValue) {
+      ++currfreq;
+    } else {
+      if (currfreq > prevFreq) { 
+        mostFreqValue = prevValue;
+        bbegin = eend + 1;
+        eend = ii - 1;
+        *value = mostFreqValue;
+        prevFreq = currfreq;
+      }
+      prevValue = a[ii];
+      currfreq = 1;
+    }
+    if ((ii == (len - 1)) && (a[ii] == prevValue)
+        && (currfreq > prevFreq)) {
+      mostFreqValue = prevValue;
+      bbegin = eend + 1;
+      eend = ii;
+      *value=mostFreqValue;
+      prevFreq = currfreq;
+    }  
+  }
+  *begin = bbegin;
+  *end = eend;
+}
+
+// shift(a, lookstart, begin, end, len) shifts the index 
+//  of the array right end indexes and subtracts 1 from 
+//  begin
+// effects: modifies a
+void shift(int a[], int lookstart, int begin, int end, int len) {
+  int lowest = begin - lookstart ;
+  for(int ii = end; lowest > 0; --lowest){
+    a[ii] = a[begin - 1];
+    --begin;
+    --end;
+    --ii;
+  }
+}
+
+// write(a, lookstart, begin, end) replaces between begin 
+//  index and end index with value in the array
+// effects: modifies a
+void write(int a[], int lookstart, int begin, int end, int value, int len) {
+  int length = end - begin + 1;
+  int last_pos = lookstart + length;
+  for (int ii = lookstart; ii < last_pos; ++ii) {
+    a[ii] = value;
+  }
+}
+
+// unique(a, len) counts how many integers are unique in 
+//  the array
+int unique(const int a[], int len) {
+  int count = 1;
+  int prevValue = a[0];
+  for (int ii = 1; ii < len; ++ii){ 
+    if (a[ii] != prevValue) {
+      ++count;
+    }
+    prevValue = a[ii];
+  }
+  return count;
+}
+
+// see mutable-fun.h for details
+void most_freq_sort(int a[], int len){
+  int lookstart = 0;
+  int begin = 0;
+  int value = 0;
+  int end = 0;
+  int count = 0;
+  selection_sort(a, len);
+  int uniq = unique(a, len);
+  for(int x = 0; x < uniq; ++x) {
+    ++count;
+    find_for_move(a, lookstart, &begin, &end, &value,len);
+    shift(&a[0], lookstart, begin, end, len);
+    write(&a[0],lookstart, begin, end, value,len);
+    lookstart = (end - begin + 1 + lookstart);
+  } 
+}
